@@ -4,6 +4,7 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef, useMemo, useEffect, useState } from "react";
 import * as THREE from "three";
+import { usePathname } from "next/navigation";
 
 interface MonumentProps {
   position: [number, number, number];
@@ -14,14 +15,26 @@ interface MonumentProps {
 export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
   const group = useRef<THREE.Group>(null);
   const [loaded, setLoaded] = useState(false);
+  const pathname = usePathname();
+
+  // Determine basePath from current pathname
+  const getBasePath = () => {
+    if (pathname.startsWith("/surajPortfolio2.0")) {
+      return "/surajPortfolio2.0";
+    }
+    return "";
+  };
+
+  const basePath = getBasePath();
 
   let scene: THREE.Group;
   try {
-    const gltf = useGLTF(modelPath);
+    const fullPath = `${basePath}${modelPath}`;
+    const gltf = useGLTF(fullPath);
     scene = gltf.scene;
-    console.log(`✓ Model loaded: ${modelPath}`);
+    console.log(`✓ Model loaded: ${fullPath}`);
   } catch (error) {
-    console.error(`✗ Failed to load model: ${modelPath}`, error);
+    console.error(`✗ Failed to load model: ${basePath}${modelPath}`, error);
     return null;
   }
 
@@ -43,13 +56,14 @@ export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
     ];
 
     models.forEach((modelPath) => {
+      const fullPath = `${basePath}${modelPath}`;
       try {
-        useGLTF.preload(modelPath);
+        useGLTF.preload(fullPath);
       } catch (error) {
-        console.warn(`Could not preload ${modelPath}:`, error);
+        console.warn(`Could not preload ${fullPath}:`, error);
       }
     });
-  }, []);
+  }, [basePath]);
 
   useFrame((state) => {
     if (!group.current) return;

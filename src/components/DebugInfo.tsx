@@ -1,12 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export function DebugInfo() {
   const [debug, setDebug] = useState<string[]>([]);
+  const pathname = usePathname();
+
+  // Determine basePath from current pathname
+  const getBasePath = () => {
+    if (pathname.startsWith("/surajPortfolio2.0")) {
+      return "/surajPortfolio2.0";
+    }
+    return "";
+  };
 
   useEffect(() => {
     const checkModels = async () => {
+      const basePath = getBasePath();
       const models = [
         "/models/mahabalipuram.glb",
         "/models/qutub.glb",
@@ -19,7 +30,8 @@ export function DebugInfo() {
       const status: string[] = [];
       for (const model of models) {
         try {
-          const response = await fetch(model, { method: "HEAD" });
+          const fullPath = `${basePath}${model}`;
+          const response = await fetch(fullPath, { method: "HEAD" });
           status.push(`${model}: ${response.ok ? "✓ Found" : "✗ Not Found"}`);
         } catch (error) {
           status.push(`${model}: ✗ Error - ${error}`);
@@ -29,7 +41,7 @@ export function DebugInfo() {
     };
 
     checkModels();
-  }, []);
+  }, [pathname]);
 
   return (
     <div className="fixed bottom-20 right-8 bg-black/80 text-white text-xs p-4 rounded max-w-xs z-50 font-mono">
