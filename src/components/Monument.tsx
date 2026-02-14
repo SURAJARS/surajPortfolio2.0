@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useRef, useEffect, useState, Suspense } from "react";
+import { useRef } from "react";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 
@@ -11,53 +11,21 @@ interface MonumentProps {
   scale?: number;
 }
 
-export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
+// Inner component that actually uses useGLTF
+function MonumentModel({ position, modelPath, scale = 1 }: MonumentProps) {
   const group = useRef<THREE.Group>(null);
-  const [gltf, setGltf] = useState<any>(null);
 
-  // Use GitHub raw content CDN for reliable model hosting
-  const getModelUrl = (path: string) => {
-    const filename = path.split("/").pop();
-    return `https://raw.githubusercontent.com/SURAJARS/surajPortfolio2.0/main/public/models/${filename}`;
-  };
+  // Get model URL
+  const filename = modelPath.split("/").pop();
+  const modelUrl = `https://raw.githubusercontent.com/SURAJARS/surajPortfolio2.0/main/public/models/${filename}`;
 
-  const modelUrl = getModelUrl(modelPath);
+  // This hook works with Suspense - it throws a promise until loaded
+  const { scene } = useGLTF(modelUrl);
+  
+  // Clone the scene
+  const clonedScene = scene.clone(true);
 
-  // Load model data on mount  
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadModel = async () => {
-      try {
-        // Preload to cache
-        useGLTF.preload(modelUrl);
-        
-        // Then load normally
-        const loadedGltf = await useGLTF(modelUrl);
-        if (isMounted) {
-          setGltf(loadedGltf);
-          console.log(`✓ Model loaded: ${modelUrl}`);
-        }
-      } catch (err: any) {
-        console.error(`✗ Failed to load model: ${err.message}`);
-      }
-    };
-
-    loadModel();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [modelUrl]);
-
-  // If model hasn't loaded, don't render
-  if (!gltf) {
-    return null;
-  }
-
-  // Clone the scene once when model loads
-  const clonedScene = gltf.scene.clone(true);
-
+  // Setup animations
   useFrame((state) => {
     if (!group.current) return;
 
@@ -69,12 +37,11 @@ export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
       position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.3;
   });
 
-  // Enable shadows and materials on all meshes
+  // Enable shadows and materials
   clonedScene.traverse((child: THREE.Object3D) => {
     if (child instanceof THREE.Mesh) {
       child.castShadow = true;
       child.receiveShadow = true;
-      // Ensure materials are visible
       if (child.material) {
         if (Array.isArray(child.material)) {
           child.material.forEach((mat: THREE.Material) => {
@@ -92,4 +59,15 @@ export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
       <primitive object={clonedScene} />
     </group>
   );
+}
+
+// Outer component that preloads and wraps with Suspense
+export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
+  const filename = modelPath.split("/").pop();
+  const modelUrl = `https://raw.githubusercontent.com/SURAJARS/surajPortfolio2.0/main/public/models/${filename}`;
+
+  // Preload model
+  useGLTF.preload(modelUrl);
+
+  return <MonumentModel position={position} modelPath={modelPath} scale={scale} />;
 }
