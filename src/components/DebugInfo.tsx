@@ -1,51 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 
 export function DebugInfo() {
   const [debug, setDebug] = useState<string[]>([]);
-  const pathname = usePathname();
-
-  // Determine basePath from current pathname
-  const getBasePath = () => {
-    if (pathname.startsWith("/surajPortfolio2.0")) {
-      return "/surajPortfolio2.0";
-    }
-    return "";
-  };
 
   useEffect(() => {
     const checkModels = async () => {
-      const basePath = getBasePath();
       const models = [
-        "/models/mahabalipuram.glb",
-        "/models/qutub.glb",
-        "/models/ellora.glb",
-        "/models/hampi.glb",
-        "/models/charminar.glb",
-        "/models/boat.glb",
+        "mahabalipuram.glb",
+        "qutub.glb",
+        "ellora.glb",
+        "hampi.glb",
+        "charminar.glb",
+        "boat.glb",
       ];
 
       const status: string[] = [];
       for (const model of models) {
         try {
-          const fullPath = `${basePath}${model}`;
-          const response = await fetch(fullPath, { method: "HEAD" });
-          status.push(`${model}: ${response.ok ? "✓ Found" : "✗ Not Found"}`);
+          // Use GitHub raw content CDN for reliable access
+          const url = `https://raw.githubusercontent.com/SURAJARS/surajPortfolio2.0/main/public/models/${model}`;
+          const response = await fetch(url, { method: "HEAD" });
+          status.push(`${model}: ${response.ok ? "✓ Found" : "✗ Not Found (HTTP " + response.status + ")"}`);
         } catch (error) {
-          status.push(`${model}: ✗ Error - ${error}`);
+          status.push(`${model}: ✗ Error`);
         }
       }
       setDebug(status);
     };
 
     checkModels();
-  }, [pathname]);
+  }, []);
 
   return (
     <div className="fixed bottom-20 right-8 bg-black/80 text-white text-xs p-4 rounded max-w-xs z-50 font-mono">
-      <div className="font-bold mb-2">Model Status:</div>
+      <div className="font-bold mb-2">Model Status (CDN):</div>
       {debug.map((line, i) => (
         <div key={i}>{line}</div>
       ))}

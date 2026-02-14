@@ -4,7 +4,6 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef, useMemo, useEffect, useState } from "react";
 import * as THREE from "three";
-import { usePathname } from "next/navigation";
 
 interface MonumentProps {
   position: [number, number, number];
@@ -15,26 +14,22 @@ interface MonumentProps {
 export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
   const group = useRef<THREE.Group>(null);
   const [loaded, setLoaded] = useState(false);
-  const pathname = usePathname();
 
-  // Determine basePath from current pathname
-  const getBasePath = () => {
-    if (pathname.startsWith("/surajPortfolio2.0")) {
-      return "/surajPortfolio2.0";
-    }
-    return "";
+  // Use GitHub raw content CDN for reliable model hosting
+  // This bypasses GitHub Pages limitations with binary files
+  const getModelUrl = (path: string) => {
+    const filename = path.split('/').pop();
+    return `https://raw.githubusercontent.com/SURAJARS/surajPortfolio2.0/main/public/models/${filename}`;
   };
-
-  const basePath = getBasePath();
 
   let scene: THREE.Group;
   try {
-    const fullPath = `${basePath}${modelPath}`;
-    const gltf = useGLTF(fullPath);
+    const modelUrl = getModelUrl(modelPath);
+    const gltf = useGLTF(modelUrl);
     scene = gltf.scene;
-    console.log(`✓ Model loaded: ${fullPath}`);
+    console.log(`✓ Model loaded: ${modelUrl}`);
   } catch (error) {
-    console.error(`✗ Failed to load model: ${basePath}${modelPath}`, error);
+    console.error(`✗ Failed to load model: ${modelPath}`, error);
     return null;
   }
 
@@ -45,7 +40,7 @@ export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
   }, [scene]);
 
   useEffect(() => {
-    // Preload models with detailed logging
+    // Preload models using GitHub raw content CDN
     const models = [
       "/models/mahabalipuram.glb",
       "/models/qutub.glb",
@@ -56,14 +51,15 @@ export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
     ];
 
     models.forEach((modelPath) => {
-      const fullPath = `${basePath}${modelPath}`;
+      const filename = modelPath.split('/').pop();
+      const modelUrl = `https://raw.githubusercontent.com/SURAJARS/surajPortfolio2.0/main/public/models/${filename}`;
       try {
-        useGLTF.preload(fullPath);
+        useGLTF.preload(modelUrl);
       } catch (error) {
-        console.warn(`Could not preload ${fullPath}:`, error);
+        console.warn(`Could not preload ${modelUrl}:`, error);
       }
     });
-  }, [basePath]);
+  }, []);
 
   useFrame((state) => {
     if (!group.current) return;
