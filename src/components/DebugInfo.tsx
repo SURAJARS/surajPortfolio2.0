@@ -22,7 +22,9 @@ export function DebugInfo() {
           // Use GitHub raw content CDN for reliable access
           const url = `https://raw.githubusercontent.com/SURAJARS/surajPortfolio2.0/main/public/models/${model}`;
           const response = await fetch(url, { method: "HEAD" });
-          status.push(`${model}: ${response.ok ? "✓ Found" : "✗ Not Found (HTTP " + response.status + ")"}`);
+          status.push(
+            `${model}: ${response.ok ? "✓ Found" : "✗ Not Found (HTTP " + response.status + ")"}`,
+          );
         } catch (error) {
           status.push(`${model}: ✗ Error`);
         }
