@@ -8,11 +8,13 @@ import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { ScrollHint } from "@/components/ScrollHint";
+import { DebugInfo } from "@/components/DebugInfo";
 
 export default function Home() {
   return (
     <main className="w-full">
       <Hero />
+      <DebugInfo />
       <ScrollHint />
       <About />
       <Projects />

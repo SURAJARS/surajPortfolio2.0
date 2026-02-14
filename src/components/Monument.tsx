@@ -2,7 +2,7 @@
 
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
 import * as THREE from "three";
 
 interface MonumentProps {
@@ -13,20 +13,26 @@ interface MonumentProps {
 
 export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
   const group = useRef<THREE.Group>(null);
+  const [loaded, setLoaded] = useState(false);
 
   let scene: THREE.Group;
   try {
     const gltf = useGLTF(modelPath);
     scene = gltf.scene;
+    console.log(`✓ Model loaded: ${modelPath}`);
   } catch (error) {
-    console.error(`Failed to load model: ${modelPath}`, error);
+    console.error(`✗ Failed to load model: ${modelPath}`, error);
     return null;
   }
 
-  const clonedScene = useMemo(() => scene.clone(true), [scene]);
+  const clonedScene = useMemo(() => {
+    const cloned = scene.clone(true);
+    setLoaded(true);
+    return cloned;
+  }, [scene]);
 
   useEffect(() => {
-    // Preload models with error handling
+    // Preload models with detailed logging
     const models = [
       "/models/mahabalipuram.glb",
       "/models/qutub.glb",
