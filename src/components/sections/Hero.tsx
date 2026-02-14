@@ -2,7 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { Monument } from "@/components/Monument";
 import { Ground, Lighting } from "@/components/SceneEnvironment";
 import { ScrollCamera } from "@/components/CameraController";
@@ -134,7 +134,9 @@ export function Hero() {
       >
         <color attach="background" args={["#f8efe2"]} />
         <fog attach="fog" args={["#f8efe2", 15, 120]} />
-        <Scene />
+        <Suspense fallback={null}>
+          <Scene />
+        </Suspense>
       </Canvas>
 
       {/* Scroll Container */}

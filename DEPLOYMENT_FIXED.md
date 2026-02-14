@@ -32,6 +32,7 @@ When you push to `main` branch:
 ## 📊 Deployment Status
 
 Check your deployments here:
+
 - **Actions Tab:** https://github.com/SURAJARS/surajPortfolio2.0/actions
 - **Deployments:** https://github.com/SURAJARS/surajPortfolio2.0/deployments
 
@@ -63,7 +64,7 @@ If you have your own domain:
 ✅ Readable About section with scroll guidance  
 ✅ "Enter Experience" button with audio  
 ✅ Responsive design  
-✅ Beautiful UI/UX  
+✅ Beautiful UI/UX
 
 ## 🆘 If Still Blank
 

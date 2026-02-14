@@ -13,17 +13,36 @@ interface MonumentProps {
 
 export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
   const group = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(modelPath);
+
+  let scene: THREE.Group;
+  try {
+    const gltf = useGLTF(modelPath);
+    scene = gltf.scene;
+  } catch (error) {
+    console.error(`Failed to load model: ${modelPath}`, error);
+    return null;
+  }
+
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
   useEffect(() => {
-    // Preload models
-    useGLTF.preload("/models/mahabalipuram.glb");
-    useGLTF.preload("/models/qutub.glb");
-    useGLTF.preload("/models/ellora.glb");
-    useGLTF.preload("/models/hampi.glb");
-    useGLTF.preload("/models/charminar.glb");
-    useGLTF.preload("/models/boat.glb");
+    // Preload models with error handling
+    const models = [
+      "/models/mahabalipuram.glb",
+      "/models/qutub.glb",
+      "/models/ellora.glb",
+      "/models/hampi.glb",
+      "/models/charminar.glb",
+      "/models/boat.glb",
+    ];
+
+    models.forEach((modelPath) => {
+      try {
+        useGLTF.preload(modelPath);
+      } catch (error) {
+        console.warn(`Could not preload ${modelPath}:`, error);
+      }
+    });
   }, []);
 
   useFrame((state) => {
