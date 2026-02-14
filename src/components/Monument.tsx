@@ -1,9 +1,9 @@
 "use client";
 
-import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState, Suspense } from "react";
 import * as THREE from "three";
+import { useGLTF } from "@react-three/drei";
 
 interface MonumentProps {
   position: [number, number, number];
@@ -13,6 +13,7 @@ interface MonumentProps {
 
 export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
   const group = useRef<THREE.Group>(null);
+  const [gltf, setGltf] = useState<any>(null);
 
   // Use GitHub raw content CDN for reliable model hosting
   const getModelUrl = (path: string) => {
@@ -21,41 +22,41 @@ export function Monument({ position, modelPath, scale = 1 }: MonumentProps) {
   };
 
   const modelUrl = getModelUrl(modelPath);
-  
-  // Load model using useGLTF hook
-  let gltf;
-  try {
-    gltf = useGLTF(modelUrl);
-    console.log(`✓ Model loaded: ${modelUrl}`);
-  } catch (error) {
-    console.error(`✗ Failed to load model: ${modelUrl}`, error);
+
+  // Load model data on mount  
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadModel = async () => {
+      try {
+        // Preload to cache
+        useGLTF.preload(modelUrl);
+        
+        // Then load normally
+        const loadedGltf = await useGLTF(modelUrl);
+        if (isMounted) {
+          setGltf(loadedGltf);
+          console.log(`✓ Model loaded: ${modelUrl}`);
+        }
+      } catch (err: any) {
+        console.error(`✗ Failed to load model: ${err.message}`);
+      }
+    };
+
+    loadModel();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [modelUrl]);
+
+  // If model hasn't loaded, don't render
+  if (!gltf) {
     return null;
   }
 
   // Clone the scene once when model loads
   const clonedScene = gltf.scene.clone(true);
-
-  useEffect(() => {
-    // Preload all models using GitHub raw content CDN
-    const models = [
-      "/models/mahabalipuram.glb",
-      "/models/qutub.glb",
-      "/models/ellora.glb",
-      "/models/hampi.glb",
-      "/models/charminar.glb",
-      "/models/boat.glb",
-    ];
-
-    models.forEach((modelPath) => {
-      const filename = modelPath.split("/").pop();
-      const url = `https://raw.githubusercontent.com/SURAJARS/surajPortfolio2.0/main/public/models/${filename}`;
-      try {
-        useGLTF.preload(url);
-      } catch (error) {
-        console.warn(`Could not preload ${url}:`, error);
-      }
-    });
-  }, []);
 
   useFrame((state) => {
     if (!group.current) return;
